@@ -43,47 +43,50 @@ ui <- fluidPage(
 
     sliderInput(inputId = "annual_income", label = "Annual Income of Borrower:", min = min(lending_club1$annual_inc), max = max(lending_club1$annual_inc), value = min(lending_club$annual_inc)),
     
+    sliderInput(inputId = "funded_amnt", label = "Amount Funded:", min = min(lending_club1$funded_amnt), max = max(lending_club1$funded_amnt), value = min(lending_club$funded_amnt)),
     
+    radioButtons(inputId = "Region", label = "Region:", choices = list("Midwest", "South", "West", "Northeast")),
     
-    # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-        ),
+    sliderInput(inputId = "int_rate", label = "Interest Rate:", min = min(lending_club1$int_rate), max = max(lending_club1$int_rate), value = min(lending_club$int_rate)),
 
         # Show a plot of the generated distribution
         mainPanel(
            plotOutput("distPlot")
         )
     )
-)
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
     
     output$distPlot <- renderPlot({
-        obs1 <- lending_club1 %>%
-            slice(1) #takes first observation from lending club dataset
+        
+        newData <- lending_club %>%
+            mutate(funded_amnt = input$funded_amnt) %>%
+            mutate(annual_inc = input$annual_inc) %>%
+            mutate(Region = input$Region) %>%
+            mutate(int_rate = input$int_rate)
         
         
         min_inc <- min(lending_club1$annual_inc)
         max_inc <- max(lending_club1$annual_inc)
         
-        obs1_many <- obs1 %>% 
+        newData <- newData %>% 
             #there is probably a better way to do this
             sample_n(size = 50, replace = TRUE) %>% 
-            select(-annual_inc) %>% 
+            #select(-annual_inc) %>% 
             mutate(annual_inc= seq(min_inc, max_inc, length.out = 50))
         
-        obs1_many %>% 
+        newData %>% 
             select(annual_inc) %>% 
             bind_cols(
                 predict(final_model,
-                        new_data = obs1_many, type = "prob")
+                        new_data = newData, type = "prob")
             ) %>% 
             ggplot(aes(x = annual_inc,
                        y = .pred_good)) +
             geom_line() +
-            labs(y = "Predicted Price (log 10)")
+            labs(y = "Predicted Probability") +
+            ggtitle("Probability of Not Paying Loan Back by Income")
     })
 }
 
