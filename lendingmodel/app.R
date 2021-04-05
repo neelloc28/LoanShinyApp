@@ -19,6 +19,8 @@ library(tidyverse)
 library(tidymodels)
 library(stacks)
 library(modeldata)
+library(bslib)
+library(thematic)
 
 #load in model
 final_model <- readRDS("lending_final_stack.rds")
@@ -35,8 +37,12 @@ lending_club1 <- lending_club %>%
     select(-addr_state, -State, -State.Code, -Division) %>%
     mutate(Region = as.factor(Region))
 
+thematic::thematic_shiny() #have ggplot theme match overall theme
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(
+    #theme
+    theme = bs_theme(bg = "white", fg = "navy", primary = "green", base_font = font_google("Raleway")),
 
     # Application title
     titlePanel("Predict Probability of Loan Repayment"),
